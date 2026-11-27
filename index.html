@@ -140,7 +140,7 @@ section { scroll-margin-top: 12px; }
     <div class="kpi"><div class="label">新放行后结构索引建成</div><div class="value">16 <small>/ 16</small></div>
       <div class="note">原型上从“被拒”变成“索引可绑定”的仓库，逐个建了索引</div></div>
     <div class="kpi"><div class="label">原型的源码改动</div><div class="value">+109 <small>−11 行</small></div>
-      <div class="note">4 个文件。相关的 5 个测试模块 263 个用例里受影响的是固定旧行为的 2 个，全量测试又发现 1 个；全量的完整结果还在重跑</div></div>
+      <div class="note">4 个文件。相关的 5 个测试模块 263 个用例里受影响的是固定旧行为的 2 个，另有 1 个逐项比较返回内容的用例要随 B2 处理。全量测试没有跑完，留到实现时在 PR 的持续集成上跑</div></div>
   </div>
 </section>
 
@@ -165,7 +165,7 @@ section { scroll-margin-top: 12px; }
     <div class="scroll"><table class="wide nowrap1">
       <thead><tr><th>部分</th><th>内容</th><th>状态</th></tr></thead>
       <tbody>
-        <tr><td class="id">1</td><td>入口门禁</td><td><span class="pill plain">未开始</span> 入口三项已有原型</td></tr>
+        <tr><td class="id">1</td><td>入口门禁</td><td><span class="pill plain">未开始</span> 入口三项已有原型。<small>另有一份本地草稿，没有提交，覆盖 A1 到 A6、B1 到 B3 和 B5，新写的 6 个用例单独运行通过，没有经过全量测试。开始实现时再决定沿用还是重写</small></td></tr>
         <tr><td class="id">2</td><td>语言无关的作业路径</td><td><span class="pill plain">未开始</span></td></tr>
         <tr><td class="id">3</td><td>Node 和 TypeScript 生态</td><td><span class="pill plain">未开始</span></td></tr>
         <tr><td class="id">4</td><td>设计测试、敲除和约定转换</td><td><span class="pill plain">未开始</span></td></tr>
@@ -219,7 +219,7 @@ section { scroll-margin-top: 12px; }
     <h3>验收</h3>
     <ul class="plain">
       <li><b>入口。</b>68 个仓库的验证重跑：带子模块的 25 个里至少 21 个能开始评审，被智能体工具目录的链接拦住的 3 个放行，<code>vercel/next.js</code> 得到一句理由而不是异常，原来能开始的仓库一个不少。</li>
-      <li><b>测试。</b>nanolize 的全量测试通过，每一部分带自己的用例。</li>
+      <li><b>测试。</b>nanolize 的全量测试通过，每一部分带自己的用例。全量测试在 PR 的持续集成上跑，不在这台机器上跑。</li>
       <li><b>真实作业，默认流程，不加绕过用的参数。</b>两个小型 TypeScript 或 JavaScript 仓库跑完整作业；<code>rea</code> 的阶段 01 和提交用整个仓库，作业只选一小组功能，因为它的源码有 100 万行，核心范围的整个作业代价很大；一个 Go 或 Rust 仓库走语言无关的路径；一个 Python 仓库做回归。Claude 和 Codex 两种运行器各至少跑一次。</li>
       <li><b>验收报告。</b>PR 说明附一页：每个作业的结束状态、验证到了什么、没验证到什么。</li>
     </ul>
@@ -312,7 +312,7 @@ section { scroll-margin-top: 12px; }
       <tbody>
         <tr><td>用户目录里子模块已经拉取</td><td>三个真实仓库（<code>lark-parser/lark</code>、<code>html5lib/html5lib-python</code>、<code>WebAssembly/wabt</code>）拉取子模块后调用输入分支</td><td>输入工作树里子模块是空目录。<code>main</code>：工作树照常建成，没有任何提示，之后的评审会被拒。原型：返回里写明评审可以开始</td></tr>
         <tr><td>整条作业</td><td>nanolize 自带的作业级测试，把子模块从 <code>vendor/library</code> 换到 <code>third_party/library</code></td><td><code>main</code>：评审控制器创建时被拒。原型：作业跑完，状态 <code>completed_with_gaps</code>，和 <code>vendor/</code> 下的那个测试一致</td></tr>
-        <tr><td>nanolize 的测试</td><td>在原型上跑了和入口、输入分支、结构索引、作业执行相关的 5 个测试模块，共 263 个用例；另外新增了 8 个用例。全量测试（6,334 个用例）由一个独立会话在原型上跑</td><td>相关模块里受影响的只有 2 个固定旧行为的用例，原型里已把它们改成固定新行为。另有 7 个作业级用例在并行负载下失败，单独重跑在 <code>main</code> 和原型上都通过。作业执行的整个测试类（43 个用例）由对抗性评审在原型上单独跑过，全部通过。<b>全量测试还没有结论。</b>第一次跑用的环境没装 pytest，124 个失败和 2 个错误里大部分是“找不到 pytest”或由它引起，这些用例在同一个环境里对 <code>main</code> 也失败，说明不了原型的问题。其中已经确定由原型引起的有 1 个：环境提案的一个用例逐项比较返回的内容，发现了 B2 新增的字段，要和 B2 一起更新。装好 pytest 的全量重跑和逐个在 <code>main</code> 上的对照正在进行，结果出来后更新这一行</td></tr>
+        <tr><td>nanolize 的测试</td><td>在原型上跑了和入口、输入分支、结构索引、作业执行相关的 5 个测试模块，共 263 个用例；另外新增了 8 个用例。全量测试（6,334 个用例）由一个独立会话在原型上试跑了两次，都没有跑出结论</td><td>相关模块里受影响的只有 2 个固定旧行为的用例，原型里已把它们改成固定新行为。另有 7 个作业级用例在并行负载下失败，单独重跑在 <code>main</code> 和原型上都通过。作业执行的整个测试类（43 个用例）由对抗性评审在原型上单独跑过，全部通过。<b>全量测试没有结论，只确定了一个由原型引起的失败</b>：环境提案的一个用例逐项比较返回里的 <code>project</code> 一项，原型往里加了一个字段，它在原型上失败、在 <code>main</code> 上通过，要随 B2 处理。其余的都不能下结论。第一次用的环境没装 pytest，124 个失败和 2 个错误里有 125 个在同一环境里对 <code>main</code> 也失败。第二次装了 pytest，跑了 80 分钟、排到 1,378 个进程里的第 411 个时停掉，当时有 62 个进程失败，其中 4 个是 900 秒超时，都没有单独重跑，也没有和 <code>main</code> 对照。这台机器跑整作业级用例比仓库里记录的耗时慢很多：记录为 8 秒的进程在这里要 26 到 289 秒。全量测试留到实现时在 PR 的持续集成上跑</td></tr>
         <tr><td>经 Codex 调用</td><td>用 Codex 命令行 0.172.0 的会话，通过它的 MCP 客户端分别调用 <code>main</code> 和原型的 <code>open_input_branch</code>、<code>propose_test_environment</code>，对象是 <code>rea</code></td><td>原型新增的字段原样到达：评审是否会被拒、项目是不是 Python 项目、其他生态的清单。工具的结果没有封闭的格式约束，新增字段不需要改接口声明。<code>build_code_index</code> 在非交互会话里需要人工批准，没有经 Codex 调用</td></tr>
         <tr><td>环境提案</td><td>对 68 个仓库各调用一次 <code>propose_test_environment</code></td><td><code>main</code> 对 31 个仓库的建议只有 <code>pytest</code> 一项。原型对其中 26 个写明“按声明这不是 Python 项目”，并列出它声明的生态</td></tr>
       </tbody>
@@ -338,7 +338,7 @@ section { scroll-margin-top: 12px; }
       <tbody>
         <tr><td class="id">A1</td><td><b>快照认出子模块。</b>用 <code>git ls-files --stage</code> 找出模式为 160000 的条目，按状态分开：没拉取（真实的空目录）记成不拦截的 <code>submodule</code>，带路径和提交号，并出现在评审回执的“已注意”列表里；已检出（目录非空）记成拦截的 <code>submodule_checked_out</code>；目录不存在、被文件或链接顶替、读不了的也拦，各有各的说法。<small>判断要放在“跳过目录”和“是不是测试”之前，对所有子模块一视同仁，包括现在被 <code>vendor/</code> 规则静默跳过的那些</small></td><td><code>repository.py</code><small><code>collect_snapshot</code>；现在记 <code>not_regular</code> 的地方在 1088 行；“已注意”的文字在 <code>NOTED</code></small></td><td><span class="pill good">已做原型</span><small>前两种状态做了。评审确认：所有读取发现的地方、体积统计、功能清单、树绑定都不需要改。“放在跳过目录之前”和其余状态没做</small></td></tr>
         <tr><td class="id">A2</td><td><b>来源检查接受没拉取的子模块。</b>只核对一件事：暂存区里它的提交号等于 <code>HEAD</code> 里的。<code>source_submodule</code> 这个理由只留给已检出的子模块，下一步写明怎么清除：<code>git submodule deinit</code>，或者改用输入工作树</td><td><code>understanding.py</code><small><code>_clean_source</code>；现在抛出拒绝的循环在 399–404 行</small></td><td><span class="pill good">已做原型</span><small>指针在暂存区被改动时报 <code>source_modified</code>，有测试。测试路径和跳过目录下的子模块不经过这段核对，但评审和输入分支另有 <code>git diff</code> 检查会拦住</small></td></tr>
-        <tr><td class="id">A3</td><td><b>把子模块的提交号计入绑定指纹。</b>现在绑定只对文件的哈希表求摘要，子模块不在表里，只改子模块指针的一次提交不会让绑定过期。<small>独立评审用夹具复现了：指针变了，<code>validate_understanding_source</code> 仍然回答 <code>current</code></small></td><td><code>understanding.py</code><small><code>_binding</code>（332–349 行）和校验它的地方</small></td><td><span class="pill warn">未做原型</span></td></tr>
+        <tr><td class="id">A3</td><td><b>把子模块的提交号计入绑定指纹。</b>现在绑定只对文件的哈希表求摘要，子模块不在表里，只改子模块指针的一次提交不会让绑定过期。<small>独立评审用夹具复现了：指针变了，<code>validate_understanding_source</code> 仍然回答 <code>current</code>。做法：绑定里加一项，记每个子模块的路径和提交号，校验时一起比较；文件的摘要不变，所以没有子模块的仓库绑定和原来一样，已经建好的索引也不用重建</small></td><td><code>understanding.py</code><small><code>_binding</code>（332–349 行）和校验它的地方</small></td><td><span class="pill warn">未做原型</span></td></tr>
       </tbody>
     </table></div>
   </div>
@@ -402,7 +402,7 @@ section { scroll-margin-top: 12px; }
       <thead><tr><th>#</th><th>改什么</th><th>在哪里</th><th>原型和验证</th></tr></thead>
       <tbody>
         <tr><td class="id">B1</td><td><b>输入分支建好时就报告评审能不能开始。</b><code>open_input_branch</code> 对刚建好的输入工作树取一次快照，把“不管选什么都拦”的发现放进返回，并给出下一步：告诉用户，在准备环境之前停下。技能在步骤 0 之前读这个字段。<small>只对无条件的发现提前停。和选择有关的发现（坏掉的链接、解析不了的文件）列成“可能拦住某个选择”但不停，它们要等清单把文件分给功能以后才能判断。预检要放进失败时清理工作树的那段保护里，工具说明里要写出这两个新字段</small></td><td><code>input_branch.py</code><small><code>open_input</code>（61 行起）；工具说明 <code>mcp_server.py:500</code>；技能 <code>nanolize-run/SKILL.md:143–169</code></small></td><td><span class="pill good">已做原型</span><small>原型用的是现成的 <code>review_refusal</code>，它把一部分和选择有关的发现也算进去了，独立评审复现了误停，正式实现要按左边的写法收窄。<code>rea</code> 带语法分析时有一个这样的发现：<code>scripts/website_i18n.py</code> 解析不了</small></td></tr>
-        <tr><td class="id">B2</td><td><b>环境提案说明项目是什么。</b>返回里加两项：按声明这是不是 Python 项目；根目录还声明了哪些别的生态（<code>package.json</code>、<code>Cargo.toml</code>、<code>go.mod</code> 等），Node 项目带上包管理器、安装命令、<code>engines</code> 和测试脚本。不是 Python 项目时加一条说明：这个环境只为作业设计的 pytest 测试准备，项目自己的测试不在里面跑，要先告诉用户。<small>正式实现要按源码而不是按元数据文件判断：数一下各后缀的受管文件，把 Python 源码和其他源码的个数都报出来，Python 占比很小就加说明。独立评审复现了原型的三种误判：只放了 <code>[tool.ruff]</code> 的 <code>pyproject.toml</code>、给文档用的 <code>requirements.txt</code> 会让 Node 项目被当成 Python 项目；没有元数据的纯 Python 仓库反而被说成不是。另外要报告实际读到了哪些标记文件，<code>package.json</code> 解析失败时写出来</small></td><td><code>test_environment.py</code><small><code>propose_test_environment</code>（226 行起），加 pytest 的地方在 315–322 行；技能步骤 0</small></td><td><span class="pill good">已做原型</span><small><code>rea</code>：标出 Node 项目、<code>npm ci</code>、Node 版本要求和测试脚本。左边小字里的几点没做</small></td></tr>
+        <tr><td class="id">B2</td><td><b>环境提案说明项目是什么。</b>返回里加两项：按声明这是不是 Python 项目；根目录还声明了哪些别的生态（<code>package.json</code>、<code>Cargo.toml</code>、<code>go.mod</code> 等），Node 项目带上包管理器、安装命令、<code>engines</code> 和测试脚本。不是 Python 项目时加一条说明：这个环境只为作业设计的 pytest 测试准备，项目自己的测试不在里面跑，要先告诉用户。<small>正式实现要按源码而不是按元数据文件判断：数一下各后缀的受管文件，把 Python 源码和其他源码的个数都报出来，Python 占比很小就加说明。独立评审复现了原型的三种误判：只放了 <code>[tool.ruff]</code> 的 <code>pyproject.toml</code>、给文档用的 <code>requirements.txt</code> 会让 Node 项目被当成 Python 项目；没有元数据的纯 Python 仓库反而被说成不是。另外要报告实际读到了哪些标记文件，<code>package.json</code> 解析失败时写出来。新字段放在返回的顶层，不放进已有的 <code>project</code> 一项，因为有现有用例逐项比较那一项</small></td><td><code>test_environment.py</code><small><code>propose_test_environment</code>（226 行起），加 pytest 的地方在 315–322 行；技能步骤 0</small></td><td><span class="pill good">已做原型</span><small><code>rea</code>：标出 Node 项目、<code>npm ci</code>、Node 版本要求和测试脚本。左边小字里的几点没做</small></td></tr>
         <tr><td class="id">B3</td><td><b>文件数上限只数会被读进来的文件。</b>10,000 的上限改为只数源码、测试和依赖文件；文档、图片、数据文件只做哈希，另设一个总上限（原型取 100,000）。绑定校验用的是同一个 10,000，而绑定里包含文档和图片，要改用总上限，否则快照放行了绑定又拒绝。<small>两个独立评审都复现了。按读代码，还有三处各有自己的文件数上限，要决定是跟着改还是在入口就说明：任务快照 20,000（<code>effort.py:43</code>）、单个检查的输入目录 10,000（<code>verification.py:61</code>）、<code>count-tokens</code>（<code>token_count.py:122</code>）</small></td><td><code>repository.py:100、1034、1037、1050</code>；<code>understanding.py:520</code></td><td><span class="pill good">已做原型</span><small>快照一侧做了，绑定校验的三处没做。6 个文件数过万的仓库里，<code>openai/codex</code> 和 <code>astral-sh/ruff</code> 过了快照这一关；<code>emscripten</code> 和 <code>home-assistant/core</code> 光源码和测试就超过 10,000，仍被拒</small></td></tr>
         <tr><td class="id">B4</td><td><b>智能体工具目录的链接不该拦下整个仓库。</b>68 个仓库里有 7 个被“目录链接”拦住，其中 3 个是指向智能体工具目录的链接：<code>.codex/skills</code>、<code>.claude/skills/…</code>、<code>.agents/skills</code> 和 <code>.gemini/skills</code>。建议把这几类目录下的文件归为非产品源码，指向它们的目录链接就落到已有的“记录但不拦”一类。<small>另外 4 个指向头文件目录、打包脚本等，属于“给同一份源码第二个路径”，维持现状</small></td><td><code>repository.py</code><small>文件分类和目录链接的判断</small></td><td><span class="pill warn">未做原型</span><small>涉及的仓库：<code>pandas-dev/pandas</code>、<code>colinhacks/zod</code>、<code>home-assistant/core</code></small></td></tr>
         <tr><td class="id">B5</td><td><b>Git 命令超时要变成一条拒绝理由。</b>快照里的 Git 命令有 20 秒上限。35,488 个文件的 <code>vercel/next.js</code> 在网络文件系统上两次都超时，异常直接抛出，调用方拿到的是一次出错而不是一句“为什么不行”。改法：捕获超时，记成拦截发现并写明原因；上限可以随文件数放宽</td><td><code>repository.py</code><small><code>_git</code>，约 488 行</small></td><td><span class="pill warn">未做原型</span></td></tr>
@@ -531,7 +531,7 @@ section { scroll-margin-top: 12px; }
 
 <section id="review">
   <h2>7. 独立核对改了方案的哪些地方</h2>
-  <p>原型和方案交给了四个独立的会话核对，它们只拿到问题，没有拿到答案：一个 Codex 会话（另一个模型）评审补丁并核对 Codex 一侧；一个会话做对抗性评审，专门找原型漏掉和会被利用的地方；一个跑 nanolize 的全量测试；一个走查非 Python 仓库在默认流程里会停在哪里。下面是被采纳进方案的发现。前三条改变了第一步的范围。</p>
+  <p>原型和方案交给了四个独立的会话核对，它们只拿到问题，没有拿到答案：一个 Codex 会话（另一个模型）评审补丁并核对 Codex 一侧；一个会话做对抗性评审，专门找原型漏掉和会被利用的地方；一个试跑 nanolize 的全量测试（没有跑完，见<a href="#validation">第 2 节</a>）；一个走查非 Python 仓库在默认流程里会停在哪里。下面是被采纳进方案的发现。前三条改变了第一步的范围。</p>
   <div class="panel">
     <div class="scroll"><table class="wide">
       <thead><tr><th>#</th><th>发现</th><th>怎么确认的</th><th>方案里的对应项</th></tr></thead>
@@ -546,6 +546,7 @@ section { scroll-margin-top: 12px; }
         <tr><td class="id">8</td><td>导出一个提交时不为子模块建目录，导出的树和检出的树不一样</td><td>对抗性评审复现</td><td>A6</td></tr>
         <tr><td class="id">9</td><td>子模块目录不存在时，来源检查把它说成“已检出”；目录没有权限列出时抛出未归类的错误</td><td>对抗性评审复现和读代码；Codex 评审读代码指出</td><td>A1、A2</td></tr>
         <tr><td class="id">10</td><td>Codex 一侧的运行命令和权限配置不需要为空的子模块目录做任何修改；新增的返回字段经 Codex 的客户端原样到达</td><td>Codex 会话核对代码并实际调用</td><td>不需要修改</td></tr>
+        <tr><td class="id">11</td><td>有一个现有用例逐项比较环境提案返回里的 <code>project</code> 一项，原型往里加字段以后它失败</td><td>全量测试的会话：在原型上失败，在 <code>main</code> 上通过</td><td>B2：新字段放在返回的顶层</td></tr>
       </tbody>
     </table></div>
     <p class="sub">评审确认原型里不需要再改的地方：所有读取快照发现的代码、体积统计、功能清单和无主文件的判断、候选树和设计树的绑定、任务快照、索引副本。</p>
@@ -557,7 +558,8 @@ section { scroll-margin-top: 12px; }
   <ul class="plain">
     <li><b>没有跑完整的 nanolize 作业。</b>68 个仓库上只验证了入口：快照、来源检查、输入分支、结构索引。“能开始评审”不等于“作业能跑完”。</li>
     <li><b>子模块都没有拉取。</b>克隆时不取子模块，这也是输入工作树里的状态。需要子模块内容才能构建或测试的仓库，过了入口以后检查仍会在原版上失败，这要靠第三步解决。</li>
-    <li><b>原型不是可以直接合入的改动。</b>它只覆盖了 A1、A2、A6 的大部分和 B1、B2、B3 的快照一侧。A3、A4、A5、B4、B5 没有做，独立评审指出的几处收窄也没有做。</li>
+    <li><b>原型不是可以直接合入的改动。</b>它只覆盖了 A1、A2 的大部分和 B1、B2、B3 的快照一侧。A3 到 A6、B4、B5 没有做，独立评审指出的几处收窄也没有做。</li>
+    <li><b>nanolize 的全量测试没有在原型上跑完。</b>跑过的是相关的 5 个测试模块。全量在这台机器上跑一遍要两个小时以上，整作业级的用例还会因为机器慢而失败，所以留到实现时在 PR 的持续集成上跑。</li>
     <li><b>克隆的是各仓库当天的默认分支。</b>仓库在变，换一天数字会有出入。<code>rea</code> 的文件数离 10,000 的上限只差 291 个。</li>
     <li><b>第三步的判断来自读代码。</b>没有在任何非 Python 仓库上跑过作业，哪一步会停是按代码和技能文件推断的。</li>
     <li><b>探针在网络文件系统上跑。</b>快照的耗时比本地磁盘慢，B5 的超时在本地磁盘上未必出现。</li>
