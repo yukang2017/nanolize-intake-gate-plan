@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>nanolize 入口门禁修改方案</title>
-<meta name="description" content="nanolize 在入口拒绝带 Git 子模块的仓库，并给非 Python 项目建 Python 环境。对着最新 main 的代码给出三步修改方案，附本地原型和 68 个公开仓库的只读入口验证。">
+<title>nanolize 非 Python 支持方案</title>
+<meta name="description" content="nanolize 在入口拒绝带 Git 子模块的仓库，并给非 Python 项目建 Python 环境。对着最新 main 的代码给出三步修改方案，目标是真正支持非 Python 项目，合成一个 PR 交付。附本地原型和 68 个公开仓库的只读入口验证。">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600&display=swap">
 <style>
-/* Layout: one reading column. Four figures and the conclusion first, the two symptoms and their cause, the validation tables, then the three steps as tables of changes, the check of the two reports, what the independent reviews changed, and the limits. */
+/* Layout: one reading column. Four figures and the conclusion first, then the goal and the scope of the pull request that is to be confirmed, the two symptoms and their cause, the validation tables, then the three steps as tables of changes, the check of the two reports, what the independent reviews changed, and the limits. */
 :root {
   --bg: #f4f6f9; --card: #fcfcfb; --ink: #14171c; --ink-2: #474e5c; --ink-3: #6b7281;
   --line: #dde1e8; --accent: #2a78d6; --accent-soft: #dfeafa;
@@ -120,12 +120,12 @@ section { scroll-margin-top: 12px; }
 <div class="page">
 
 <header>
-  <div class="eyebrow">nanolize 入口门禁 · main cbf27b83 · 2026-11-27</div>
-  <h1>没拉取的子模块不该拦下整个仓库：入口门禁的三步修改方案</h1>
-  <p class="lede">在最新 <code>main</code> 上对公开仓库 <code>morluto/rea</code> 做 nanolize 时，仓库在建结构索引和开始评审两处都被拒绝，原因是 <code>third_party/</code> 下有 5 个 Git 子模块；同一次运行还给这个 TypeScript 项目建了一个只装 pytest 的 Python 环境。这一页对着最新 <code>main</code> 的代码给出三步修改方案。前两步有本地原型，并在 68 个公开仓库上做了只读的入口验证。</p>
+  <div class="eyebrow">nanolize 非 Python 项目支持 · main cbf27b83 · 2026-11-27</div>
+  <h1>让 nanolize 真正支持非 Python 项目：从入口门禁开始的三步方案</h1>
+  <p class="lede">在最新 <code>main</code> 上对公开仓库 <code>morluto/rea</code> 做 nanolize 时，仓库在建结构索引和开始评审两处都被拒绝，原因是 <code>third_party/</code> 下有 5 个 Git 子模块；同一次运行还给这个 TypeScript 项目建了一个只装 pytest 的 Python 环境。这一页对着最新 <code>main</code> 的代码给出三步修改方案，目标是让 nanolize 真正支持非 Python 项目，三步合成一个 PR 交付。前两步有本地原型，并在 68 个公开仓库上做了只读的入口验证。</p>
   <div class="meta">
     <span><b>对象</b> nanolize（私有仓库）<code>main</code>，提交 <code>cbf27b83</code></span>
-    <span><b>状态</b> 本页是分析和方案。nanolize 仓库没有改动，原型只在本地副本上，没有推送</span>
+    <span><b>状态</b> 本页是分析和待确认的方案。nanolize 仓库没有改动，原型只在本地副本上，没有推送。范围确认之后才开始实现</span>
     <span><b>验证范围</b> 只验证入口：快照、来源检查、结构索引、输入分支。没有在这些仓库上跑完整的 nanolize 作业</span>
     <span><b>参考</b> 两份外部分析报告，核对结果见<a href="#reports">第 6 节</a></span>
   </div>
@@ -140,19 +140,95 @@ section { scroll-margin-top: 12px; }
     <div class="kpi"><div class="label">新放行后结构索引建成</div><div class="value">16 <small>/ 16</small></div>
       <div class="note">原型上从“被拒”变成“索引可绑定”的仓库，逐个建了索引</div></div>
     <div class="kpi"><div class="label">原型的源码改动</div><div class="value">+109 <small>−11 行</small></div>
-      <div class="note">4 个文件。相关的 5 个测试模块 263 个用例里，受影响的只有固定旧行为的 2 个</div></div>
+      <div class="note">4 个文件。相关的 5 个测试模块 263 个用例里受影响的是固定旧行为的 2 个，全量测试又发现 1 个；全量的完整结果还在重跑</div></div>
   </div>
 </section>
 
 <section>
   <h2>结论</h2>
   <ul class="plain">
+    <li><b>目标是真正支持非 Python 项目，交付一个完整的 PR。</b>三步是同一个 PR 的内容，分四个部分做：入口门禁、语言无关的作业路径、Node 和 TypeScript 生态、设计测试和敲除。做到什么算完成、怎么验收、需要确认的四件事，见<a href="#pr">下一节</a>。</li>
     <li><b>拒绝是有意的设计，不是最新 main 引入的回归，但拦得过宽。</b>规则写在文档里，也有测试固定。它的问题是按目录名判断：同一个没拉取的子模块，放在 <code>vendor/</code> 下整个作业能跑完，放在 <code>third_party/</code> 下连评审都开始不了。</li>
     <li><b>第一步：没拉取的子模块改成“记录但不读”。</b>入口改三处，仓库就能进门：原型上 25 个带子模块的仓库有 21 个能开始评审，剩下 4 个被别的规则拦住。作业一侧还有一个根因必须一起修：集成步骤会删掉子模块的空目录。不修的话，仓库进了门，作业会在两种常见情况下失败，交付结果里也没有子模块条目。这是独立评审用作业级探针复现出来的；只看入口会得出“下游已经能处理”的结论，那个结论不完整。</li>
     <li><b>第二步：尽早失败，对非 Python 项目说清楚。</b>输入分支建好时就报告“这个仓库开始不了评审”，不用等环境装完；环境提案标明项目不是 Python 项目；文件数上限只数源码、测试和依赖文件。</li>
-    <li><b>第三步：真正支持非 Python 项目，以及确实要用子模块内容的仓库。</b>这是新功能，建议单独立项。其中八处小改动（C1）就能让非 Python 仓库靠自己的测试完成一个作业；和 Python 完全对等（C2）的每一项都是大改动。</li>
+    <li><b>第三步：真正支持非 Python 项目。</b>这是这次改动的目标，也是工作量的大头。八处小改动（C1）让非 Python 仓库靠自己的测试完成一个作业；和 Python 对等（C2）的每一项都是大改动，其中敲除、导入表和“导出”证据可以建立在已有的结构索引上，不用引入新的解析器。给作业提供子模块内容（C3）和语言支持无关，不放进这个 PR。</li>
     <li><b>只做前两步，<code>rea</code> 能进门，但默认流程会在提交时被拒两次。</b>阶段 01 的每一步都能给出结果。到提交时，项目自己的测试命令不能直接写成检查，默认做的约定转换又让清单缺 pytest 模板。两处都能靠显式输入避开。这是分段走查的结论，没有在 <code>rea</code> 上跑作业。</li>
   </ul>
+</section>
+
+<section id="pr">
+  <h2>目标和 PR 范围（待确认）</h2>
+  <p>这次改动的目标是让 nanolize 真正支持非 Python 项目，交付物是一个完整的 PR。后面的三步因此是同一个 PR 的内容，第三步不再留到以后单独立项。这一节说明做到什么算完成、PR 包含什么、怎么验收。它是提议，确认之前不改代码。</p>
+
+  <div class="panel">
+    <h3>做到什么算“真正支持”</h3>
+    <p>判断标准是默认流程：用户只输入 <code>$nanolize &lt;目录&gt;</code>，不需要知道任何绕过办法，作业跑到交付，结束状态和 Python 仓库按同一套规则判断。“现在”一列来自<a href="#step3">第 5 节</a>的走查，后两列是这个 PR 要达到的状态。</p>
+    <div class="scroll"><table class="wide nowrap1">
+      <thead><tr><th>环节</th><th>现在，非 Python 仓库</th><th>PR 之后：Node 和 TypeScript</th><th>PR 之后：其他语言</th></tr></thead>
+      <tbody>
+        <tr><td>入口</td><td>带没拉取的子模块就被拒</td><td>能开始评审</td><td>能开始评审</td></tr>
+        <tr><td>测试环境</td><td>建一个只装 pytest 的 Python 环境</td><td>nanolize 准备项目要求的 Node 版本，按锁文件安装依赖，并把依赖目录放到每个跑检查的地方</td><td>提案写明项目属于哪个生态、需要什么。依赖由准备脚本安装</td></tr>
+        <tr><td>检查</td><td>任何命令都能当检查，但要操作者自己写；项目自己的运行命令在提交时被拒</td><td>从 <code>package.json</code> 的测试脚本提出检查，按用例比较</td><td>带用例报告的命令按用例比较</td></tr>
+        <tr><td>提交</td><td>默认流程被拒两次</td><td>通过</td><td>通过</td></tr>
+        <tr><td>设计测试和敲除</td><td>只能设计 pytest 测试。没有 Python 文件的功能没有可敲除的内容</td><td>用 vitest 设计测试，敲除 TypeScript 函数</td><td>不设计测试，只用项目自己的检查，结果里写明</td></tr>
+        <tr><td>修复反馈</td><td>失败的检查只给作者一个编号和状态</td><td>vitest 失败和 Node 调用栈的摘要，和 Python 一样不透露测试内容</td><td>哪些用例失败</td></tr>
+        <tr><td>安装检查</td><td>每一步必须以 <code>{python}</code> 开头，否则最好的结束状态是 <code>completed_with_gaps</code></td><td>打包、安装、运行入口</td><td>任意命令的安装步骤</td></tr>
+        <tr><td>体积统计和交付</td><td>能用。<code>.mts</code> 和 <code>.cts</code> 不算源码</td><td>能用，这两个后缀算源码</td><td>能用</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="panel">
+    <h3>PR 的四个部分</h3>
+    <p>按这个顺序做，每一部分做完都能单独验收。编号指后面各节里的条目。</p>
+    <div class="scroll"><table class="wide">
+      <thead><tr><th>部分</th><th>内容</th><th>主要模块</th><th>规模和验收</th></tr></thead>
+      <tbody>
+        <tr><td class="id">1</td><td><b>入口门禁。</b>第一步和第二步的全部条目：A1 到 A8、B1 到 B5</td><td><code>repository</code>、<code>understanding</code>、<code>input_branch</code>、<code>rewrite</code>、<code>execution</code>、<code>job_tools/deliver</code>、<code>test_environment</code>；文档和技能</td><td><span class="pill good">小到中</span><small>入口的部分已有原型。验收：68 个仓库的入口验证重跑；A3 到 A6 各有作业级用例</small></td></tr>
+        <tr><td class="id">2</td><td><b>语言无关的作业路径。</b>C1.1 到 C1.8；<code>.mts</code> 和 <code>.cts</code> 算源码；检查在哪里跑，依赖目录就放到哪里；锁文件计入环境指纹</td><td><code>rewrite</code>、<code>graph_contract</code>、<code>execution</code>、<code>execution_readiness</code>、<code>leaf_test_validity</code>、<code>workflow</code>、<code>verification</code>、<code>baseline_guard</code></td><td><span class="pill plain">中</span><small>验收：一个小型 TypeScript 仓库和一个 Go 或 Rust 仓库，用默认流程和项目自己的测试跑完作业</small></td></tr>
+        <tr><td class="id">3</td><td><b>Node 和 TypeScript 生态。</b>Node 环境（版本、按锁文件安装、收据）；从测试脚本提出检查；失败摘要；安装检查；作者自检和提示词</td><td><code>test_environment</code>、<code>failure_digest</code>、<code>assertion_feedback</code>、<code>author_selfcheck</code>、<code>static_imports</code>、<code>workflow</code>、提示词；技能</td><td><span class="pill warn">大</span><small>验收：<code>rea</code> 用默认流程通过提交并跑完一个作业；小型仓库的结束状态是 <code>completed</code></small></td></tr>
+        <tr><td class="id">4</td><td><b>设计测试、敲除和约定转换。</b>用 vitest 设计测试；敲除 TypeScript 函数；导入表和范围基线改用结构索引；转换时把导出当证据</td><td><code>leaf_test_design</code>、<code>design_static</code>、<code>leaf_test_validity</code>、<code>graph_contract</code>、<code>recovered_tests</code>、<code>capabilities</code>、<code>scope_check</code>、<code>scope_baseline</code>、<code>check_scope</code></td><td><span class="pill warn">大</span><small>四部分里最大。验收：TypeScript 仓库的作业里有设计出来的测试和敲除证据</small></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="panel">
+    <h3>三个做法上的决定</h3>
+    <ul class="plain">
+      <li><b>加一层“生态”描述，不重写 Python 的逻辑。</b>nanolize 的 144 个源码模块里有 30 个直接用 Python 的语法分析。这些逻辑不动。新增的一层只描述四件事：这个生态怎么装依赖、怎么跑一个测试文件并给出用例报告、测试文件怎么命名、失败输出怎么读。Python 现有的行为是其中一项，Node 是第二项，以后加别的语言是再加一项。</li>
+      <li><b>非 Python 语言的语法信息来自结构索引，不引入新的解析器。</b>结构索引已经解析 TypeScript、JavaScript、Rust、Go、C、C++、Java 等语言：每个函数和方法有起止行列、签名、是否导出，文件之间有导入和调用关系。<code>rea</code> 的索引有 170,070 个节点；<code>openai/codex</code> 的索引里 Rust 有 42,895 个函数节点。敲除要的函数范围、导入表、转换要的“导出”证据都可以从这里取。代价是对非 Python 仓库，索引从“默认开”变成必需。<small>设计出来的测试文件不在索引里，它的静态检查用什么解析还要在实现时定：可以对设计目录单独建一次索引，或者只做词法检查</small></li>
+      <li><b>Python 仓库的行为不变。</b>每一处改动对 Python 仓库都应该是无操作，用全量测试和 Python 仓库的入口验证守住。默认行为的变化（例如不再转换）只发生在非 Python 的功能上。</li>
+    </ul>
+  </div>
+
+  <div class="panel">
+    <h3>验收</h3>
+    <ul class="plain">
+      <li><b>入口。</b>68 个仓库的验证重跑：带子模块的 25 个里至少 21 个能开始评审，被智能体工具目录的链接拦住的 3 个放行，<code>vercel/next.js</code> 得到一句理由而不是异常，原来能开始的仓库一个不少。</li>
+      <li><b>测试。</b>nanolize 的全量测试通过，每一部分带自己的用例。</li>
+      <li><b>真实作业，默认流程，不加绕过用的参数。</b>两个小型 TypeScript 或 JavaScript 仓库跑完整作业；<code>rea</code> 的阶段 01 和提交用整个仓库，作业只选一小组功能，因为它的源码有 100 万行，核心范围的整个作业代价很大；一个 Go 或 Rust 仓库走语言无关的路径；一个 Python 仓库做回归。Claude 和 Codex 两种运行器各至少跑一次。</li>
+      <li><b>验收报告。</b>PR 说明附一页：每个作业的结束状态、验证到了什么、没验证到什么。</li>
+    </ul>
+  </div>
+
+  <div class="panel">
+    <h3>需要确认的四件事</h3>
+    <ol class="plain">
+      <li><b>范围。</b>建议四个部分都做：Node 和 TypeScript 做到和 Python 对等，其他语言做到第 2 部分的水平。较小的选择是只做第 1 到第 3 部分：非 Python 仓库能用默认流程跑完作业，但验证只靠项目自己的测试，没有设计测试和敲除。</li>
+      <li><b>子模块内容（C3）不放进这个 PR。</b>它和语言支持无关，<code>rea</code> 的核心功能也不依赖子模块。</li>
+      <li><b>验收作业用哪些仓库，可以花多少。</b>真实作业要花智能体调用，是这个 PR 里最贵的部分。</li>
+      <li><b>推送和开 PR 的时机。</b>实现在本地分支上做。可以做完再确认一次才推送，也可以现在就同意做完直接开 PR。</li>
+    </ol>
+  </div>
+
+  <div class="panel">
+    <h3>这个 PR 不包含的</h3>
+    <ul class="plain">
+      <li>其他生态（Rust、Go、Java、C++ 等）的环境准备、设计测试和敲除。这次给它们语言无关的路径，和以后加一项生态描述的位置。</li>
+      <li>给作业提供子模块的内容（C3）。</li>
+      <li>走查没有读到的部分：性能验收、任务成本评估和报告站点在非 Python 仓库上的表现。实现前先补走查，有问题的并入第 3 部分。</li>
+    </ul>
+  </div>
 </section>
 
 <section id="problem">
@@ -222,7 +298,7 @@ section { scroll-margin-top: 12px; }
       <tbody>
         <tr><td>用户目录里子模块已经拉取</td><td>三个真实仓库（<code>lark-parser/lark</code>、<code>html5lib/html5lib-python</code>、<code>WebAssembly/wabt</code>）拉取子模块后调用输入分支</td><td>输入工作树里子模块是空目录。<code>main</code>：工作树照常建成，没有任何提示，之后的评审会被拒。原型：返回里写明评审可以开始</td></tr>
         <tr><td>整条作业</td><td>nanolize 自带的作业级测试，把子模块从 <code>vendor/library</code> 换到 <code>third_party/library</code></td><td><code>main</code>：评审控制器创建时被拒。原型：作业跑完，状态 <code>completed_with_gaps</code>，和 <code>vendor/</code> 下的那个测试一致</td></tr>
-        <tr><td>nanolize 的测试</td><td>在原型上跑了和入口、输入分支、结构索引、作业执行相关的 5 个测试模块，共 263 个用例；另外新增了 8 个用例</td><td>受影响的只有 2 个固定旧行为的用例，原型里已把它们改成固定新行为。另有 7 个作业级用例在并行负载下失败，单独重跑在 <code>main</code> 和原型上都通过。作业执行的整个测试类（43 个用例）由对抗性评审在原型上单独跑过，全部通过</td></tr>
+        <tr><td>nanolize 的测试</td><td>在原型上跑了和入口、输入分支、结构索引、作业执行相关的 5 个测试模块，共 263 个用例；另外新增了 8 个用例。全量测试（6,334 个用例）由一个独立会话在原型上跑</td><td>相关模块里受影响的只有 2 个固定旧行为的用例，原型里已把它们改成固定新行为。另有 7 个作业级用例在并行负载下失败，单独重跑在 <code>main</code> 和原型上都通过。作业执行的整个测试类（43 个用例）由对抗性评审在原型上单独跑过，全部通过。<b>全量测试还没有结论。</b>第一次跑用的环境没装 pytest，124 个失败和 2 个错误里大部分是“找不到 pytest”或由它引起，这些用例在同一个环境里对 <code>main</code> 也失败，说明不了原型的问题。其中已经确定由原型引起的有 1 个：环境提案的一个用例逐项比较返回的内容，发现了 B2 新增的字段，要和 B2 一起更新。装好 pytest 的全量重跑和逐个在 <code>main</code> 上的对照正在进行，结果出来后更新这一行</td></tr>
         <tr><td>经 Codex 调用</td><td>用 Codex 命令行 0.172.0 的会话，通过它的 MCP 客户端分别调用 <code>main</code> 和原型的 <code>open_input_branch</code>、<code>propose_test_environment</code>，对象是 <code>rea</code></td><td>原型新增的字段原样到达：评审是否会被拒、项目是不是 Python 项目、其他生态的清单。工具的结果没有封闭的格式约束，新增字段不需要改接口声明。<code>build_code_index</code> 在非交互会话里需要人工批准，没有经 Codex 调用</td></tr>
         <tr><td>环境提案</td><td>对 68 个仓库各调用一次 <code>propose_test_environment</code></td><td><code>main</code> 对 31 个仓库的建议只有 <code>pytest</code> 一项。原型对其中 26 个写明“按声明这不是 Python 项目”，并列出它声明的生态</td></tr>
       </tbody>
@@ -395,11 +471,12 @@ section { scroll-margin-top: 12px; }
         <tr><td>作者辅助和安装辅助</td><td>自检（<code>tsc --noEmit</code>）、缺失导入、提示词里去掉 pip 和 <code>pyproject.toml</code>；<code>{node}</code>、<code>{npm}</code> 安装步骤</td><td><code>author_selfcheck.py</code>、<code>static_imports.py</code>、<code>workflow.py</code></td><td>中</td></tr>
       </tbody>
     </table></div>
+    <p class="sub">有一个现成的基础能让其中几项变小。结构索引已经解析 TypeScript、JavaScript、Rust、Go、C、C++、Java 等语言，每个函数和方法都有起止行列、签名和是否导出，文件之间有导入和调用关系。敲除要的函数范围、导入表、转换要的“导出”证据都可以从索引里取。设计测试的静态检查、失败摘要和 Node 环境没有现成的基础。</p>
   </div>
 
   <div class="panel">
     <h3>C3：给作业提供子模块的内容</h3>
-    <p>第一步放行的是“不用子模块内容也能验证”的仓库。要用内容的仓库需要另一种处理：把子模块按固定的提交号取到仓库之外，再以只读方式放进检查、作者和设计者的沙箱里的原路径上。内容不进快照、不计体积、作者不能改。沙箱已有只读挂载的机制（<code>check_sandbox.py</code>、<code>runners/_claude_session.py:644–653</code>），要新加的是取内容、在清单里声明、以及让基线记录它的提交号。这一项依赖 A4 到 A6，规模中到大，建议等有具体仓库需要时再做。</p>
+    <p>第一步放行的是“不用子模块内容也能验证”的仓库。要用内容的仓库需要另一种处理：把子模块按固定的提交号取到仓库之外，再以只读方式放进检查、作者和设计者的沙箱里的原路径上。内容不进快照、不计体积、作者不能改。沙箱已有只读挂载的机制（<code>check_sandbox.py</code>、<code>runners/_claude_session.py:644–653</code>），要新加的是取内容、在清单里声明、以及让基线记录它的提交号。这一项依赖 A4 到 A6，规模中到大。它和语言支持无关，不放进这次的 PR，建议等有具体仓库需要时再做。</p>
     <ul class="plain">
       <li><b>验证里看到的需求。</b>25 个带子模块的仓库里，从位置看大致三种用途：构建要用的第三方库（<code>numpy</code>、<code>scipy</code>、<code>LightGBM</code>、<code>xgboost</code>、<code>taichi</code> 等），测试要用的数据（<code>html5lib-python</code>、<code>lark</code>、<code>go-ethereum</code>、<code>arrow</code>），和核心功能无关的周边工具（<code>rea</code>）。前两种过了入口以后，依赖子模块的检查在原版上就跑不过。这是按位置判断的，没有逐个跑它们的构建和测试。</li>
       <li><b>最直接的例子是 <code>cupy/cupy</code>。</b>仓库里有一个指向子模块内部的链接，子模块没拉取时链接是断的，评审被拒。</li>
