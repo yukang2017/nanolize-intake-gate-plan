@@ -125,7 +125,7 @@ section { scroll-margin-top: 12px; }
   <p class="lede">在最新 <code>main</code> 上对公开仓库 <code>morluto/rea</code> 做 nanolize 时，仓库在建结构索引和开始评审两处都被拒绝，原因是 <code>third_party/</code> 下有 5 个 Git 子模块；同一次运行还给这个 TypeScript 项目建了一个只装 pytest 的 Python 环境。这一页对着最新 <code>main</code> 的代码给出三步修改方案，目标是让 nanolize 真正支持非 Python 项目，三步合成一个 PR 交付。前两步有本地原型，并在 68 个公开仓库上做了只读的入口验证。</p>
   <div class="meta">
     <span><b>对象</b> nanolize（私有仓库）<code>main</code>，提交 <code>cbf27b83</code></span>
-    <span><b>状态</b> 本页是分析和待确认的方案。nanolize 仓库没有改动，原型只在本地副本上，没有推送。范围确认之后才开始实现</span>
+    <span><b>状态</b> 方案的范围在 2026-11-27 确认，实现进行中，进度见<a href="#pr">目标和 PR 范围</a>一节</span>
     <span><b>验证范围</b> 只验证入口：快照、来源检查、结构索引、输入分支。没有在这些仓库上跑完整的 nanolize 作业</span>
     <span><b>参考</b> 两份外部分析报告，核对结果见<a href="#reports">第 6 节</a></span>
   </div>
@@ -147,7 +147,7 @@ section { scroll-margin-top: 12px; }
 <section>
   <h2>结论</h2>
   <ul class="plain">
-    <li><b>目标是真正支持非 Python 项目，交付一个完整的 PR。</b>三步是同一个 PR 的内容，分四个部分做：入口门禁、语言无关的作业路径、Node 和 TypeScript 生态、设计测试和敲除。做到什么算完成、怎么验收、需要确认的四件事，见<a href="#pr">下一节</a>。</li>
+    <li><b>目标是真正支持非 Python 项目，交付一个完整的 PR。</b>三步是同一个 PR 的内容，分四个部分做：入口门禁、语言无关的作业路径、Node 和 TypeScript 生态、设计测试和敲除。做到什么算完成、怎么验收、已确认的范围和进度，见<a href="#pr">下一节</a>。</li>
     <li><b>拒绝是有意的设计，不是最新 main 引入的回归，但拦得过宽。</b>规则写在文档里，也有测试固定。它的问题是按目录名判断：同一个没拉取的子模块，放在 <code>vendor/</code> 下整个作业能跑完，放在 <code>third_party/</code> 下连评审都开始不了。</li>
     <li><b>第一步：没拉取的子模块改成“记录但不读”。</b>入口改三处，仓库就能进门：原型上 25 个带子模块的仓库有 21 个能开始评审，剩下 4 个被别的规则拦住。作业一侧还有一个根因必须一起修：集成步骤会删掉子模块的空目录。不修的话，仓库进了门，作业会在两种常见情况下失败，交付结果里也没有子模块条目。这是独立评审用作业级探针复现出来的；只看入口会得出“下游已经能处理”的结论，那个结论不完整。</li>
     <li><b>第二步：尽早失败，对非 Python 项目说清楚。</b>输入分支建好时就报告“这个仓库开始不了评审”，不用等环境装完；环境提案标明项目不是 Python 项目；文件数上限只数源码、测试和依赖文件。</li>
@@ -157,8 +157,22 @@ section { scroll-margin-top: 12px; }
 </section>
 
 <section id="pr">
-  <h2>目标和 PR 范围（待确认）</h2>
-  <p>这次改动的目标是让 nanolize 真正支持非 Python 项目，交付物是一个完整的 PR。后面的三步因此是同一个 PR 的内容，第三步不再留到以后单独立项。这一节说明做到什么算完成、PR 包含什么、怎么验收。它是提议，确认之前不改代码。</p>
+  <h2>目标和 PR 范围（已确认）</h2>
+  <p>这次改动的目标是让 nanolize 真正支持非 Python 项目，交付物是一个完整的 PR。后面的三步因此是同一个 PR 的内容，第三步不再留到以后单独立项。这一节说明做到什么算完成、PR 包含什么、怎么验收。范围在 2026-11-27 确认，实现从第 1 部分开始，进度记在下面的表里。</p>
+
+  <div class="panel">
+    <h3>进度</h3>
+    <div class="scroll"><table class="wide nowrap1">
+      <thead><tr><th>部分</th><th>内容</th><th>状态</th></tr></thead>
+      <tbody>
+        <tr><td class="id">1</td><td>入口门禁</td><td><span class="pill plain">进行中</span> 入口三项已有原型，正在按本页的条目做成正式实现</td></tr>
+        <tr><td class="id">2</td><td>语言无关的作业路径</td><td><span class="pill plain">未开始</span></td></tr>
+        <tr><td class="id">3</td><td>Node 和 TypeScript 生态</td><td><span class="pill plain">未开始</span></td></tr>
+        <tr><td class="id">4</td><td>设计测试、敲除和约定转换</td><td><span class="pill plain">未开始</span></td></tr>
+        <tr><td class="id">验收</td><td>真实作业和验收报告</td><td><span class="pill plain">未开始</span></td></tr>
+      </tbody>
+    </table></div>
+  </div>
 
   <div class="panel">
     <h3>做到什么算“真正支持”</h3>
@@ -212,12 +226,12 @@ section { scroll-margin-top: 12px; }
   </div>
 
   <div class="panel">
-    <h3>需要确认的四件事</h3>
+    <h3>已确认的四件事</h3>
     <ol class="plain">
-      <li><b>范围。</b>建议四个部分都做：Node 和 TypeScript 做到和 Python 对等，其他语言做到第 2 部分的水平。较小的选择是只做第 1 到第 3 部分：非 Python 仓库能用默认流程跑完作业，但验证只靠项目自己的测试，没有设计测试和敲除。</li>
+      <li><b>范围：四个部分都做。</b>Node 和 TypeScript 做到和 Python 对等，其他语言做到第 2 部分的水平。</li>
       <li><b>子模块内容（C3）不放进这个 PR。</b>它和语言支持无关，<code>rea</code> 的核心功能也不依赖子模块。</li>
-      <li><b>验收作业用哪些仓库，可以花多少。</b>真实作业要花智能体调用，是这个 PR 里最贵的部分。</li>
-      <li><b>推送和开 PR 的时机。</b>实现在本地分支上做。可以做完再确认一次才推送，也可以现在就同意做完直接开 PR。</li>
+      <li><b>验收作业按上面“验收”一栏做。</b>两个小型 TypeScript 或 JavaScript 仓库跑完整作业，<code>rea</code> 只选一小组功能，一个 Go 或 Rust 仓库，一个 Python 仓库做回归。</li>
+      <li><b>可以随时开 PR。</b>实现过程中就开，用 PR 的持续集成跑测试。</li>
     </ol>
   </div>
 
