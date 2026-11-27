@@ -125,7 +125,7 @@ section { scroll-margin-top: 12px; }
   <p class="lede">在最新 <code>main</code> 上对公开仓库 <code>morluto/rea</code> 做 nanolize 时，仓库在建结构索引和开始评审两处都被拒绝，原因是 <code>third_party/</code> 下有 5 个 Git 子模块；同一次运行还给这个 TypeScript 项目建了一个只装 pytest 的 Python 环境。这一页对着最新 <code>main</code> 的代码给出三步修改方案，目标是让 nanolize 真正支持非 Python 项目，三步合成一个 PR 交付。前两步有本地原型，并在 68 个公开仓库上做了只读的入口验证。</p>
   <div class="meta">
     <span><b>对象</b> nanolize（私有仓库）<code>main</code>，提交 <code>cbf27b83</code></span>
-    <span><b>状态</b> 方案的范围在 2026-11-27 确认，实现进行中，进度见<a href="#pr">目标和 PR 范围</a>一节</span>
+    <span><b>状态</b> 方案的范围在 2026-11-27 确认。实现尚未开始，等待开始的指示。nanolize 仓库没有改动</span>
     <span><b>验证范围</b> 只验证入口：快照、来源检查、结构索引、输入分支。没有在这些仓库上跑完整的 nanolize 作业</span>
     <span><b>参考</b> 两份外部分析报告，核对结果见<a href="#reports">第 6 节</a></span>
   </div>
@@ -158,14 +158,14 @@ section { scroll-margin-top: 12px; }
 
 <section id="pr">
   <h2>目标和 PR 范围（已确认）</h2>
-  <p>这次改动的目标是让 nanolize 真正支持非 Python 项目，交付物是一个完整的 PR。后面的三步因此是同一个 PR 的内容，第三步不再留到以后单独立项。这一节说明做到什么算完成、PR 包含什么、怎么验收。范围在 2026-11-27 确认，实现从第 1 部分开始，进度记在下面的表里。</p>
+  <p>这次改动的目标是让 nanolize 真正支持非 Python 项目，交付物是一个完整的 PR。后面的三步因此是同一个 PR 的内容，第三步不再留到以后单独立项。这一节说明做到什么算完成、PR 包含什么、怎么验收。范围在 2026-11-27 确认。实现尚未开始，开始以后进度记在下面的表里。</p>
 
   <div class="panel">
     <h3>进度</h3>
     <div class="scroll"><table class="wide nowrap1">
       <thead><tr><th>部分</th><th>内容</th><th>状态</th></tr></thead>
       <tbody>
-        <tr><td class="id">1</td><td>入口门禁</td><td><span class="pill plain">进行中</span> 入口三项已有原型，正在按本页的条目做成正式实现</td></tr>
+        <tr><td class="id">1</td><td>入口门禁</td><td><span class="pill plain">未开始</span> 入口三项已有原型</td></tr>
         <tr><td class="id">2</td><td>语言无关的作业路径</td><td><span class="pill plain">未开始</span></td></tr>
         <tr><td class="id">3</td><td>Node 和 TypeScript 生态</td><td><span class="pill plain">未开始</span></td></tr>
         <tr><td class="id">4</td><td>设计测试、敲除和约定转换</td><td><span class="pill plain">未开始</span></td></tr>
